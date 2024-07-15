@@ -4,14 +4,13 @@ from database import DatabaseHandler
 from kafka import KafkaConsumer
 
 database_handler = DatabaseHandler(
-    dbname="example",
-    user="example",
-    password="example"
+    dbname="PadinET",
+    user="postgres",
+    password="potgres"
 )
 
 consumer = KafkaConsumer(
-    "example-topic",
-    group_id="example-group",
+    "PadinET",
     bootstrap_servers="localhost:9092"
 )
 
