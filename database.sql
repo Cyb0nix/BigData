@@ -1,12 +1,12 @@
 -- Game Information
 CREATE TABLE game (
-    gameId INT PRIMARY KEY,
+    gameId SERIAL PRIMARY KEY
     -- Add other game details here (e.g., startTime, location, etc.)
 );
 
 -- Teams
 CREATE TABLE team (
-    teamId INT PRIMARY KEY AUTO_INCREMENT,
+    teamId SERIAL PRIMARY KEY,
     teamName VARCHAR(255)
 );
 
@@ -20,7 +20,7 @@ CREATE TABLE player (
 
 -- Main Game Events
 CREATE TABLE game_event (
-    eventId BIGINT PRIMARY KEY AUTO_INCREMENT, 
+    eventId BIGSERIAL PRIMARY KEY,
     timestamp BIGINT,
     gameId INT,
     eventType VARCHAR(50),
@@ -34,6 +34,7 @@ CREATE TABLE game_event (
 -- Event-Specific Tables
 CREATE TABLE shot_event (
     eventId BIGINT PRIMARY KEY,
+    playerId INT,
     shotType VARCHAR(10),
     madeShot BOOLEAN,
     points INT,
@@ -41,51 +42,64 @@ CREATE TABLE shot_event (
     shotClock INT,
     shotDistance DECIMAL(5, 2),
     FOREIGN KEY (eventId) REFERENCES game_event(eventId),
-    FOREIGN KEY (assistPlayerId) REFERENCES player(playerId)  -- Link to player if assisted
+    FOREIGN KEY (assistPlayerId) REFERENCES player(playerId),
+    FOREIGN KEY (playerId) REFERENCES player(playerId)
 );
 
 CREATE TABLE pass_event (
     eventId BIGINT PRIMARY KEY,
+    playerId INT,
     passType VARCHAR(20),
     receiverPlayerId INT,
     passOutcome VARCHAR(20),
     passDistance DECIMAL(5, 2),
     FOREIGN KEY (eventId) REFERENCES game_event(eventId),
-    FOREIGN KEY (receiverPlayerId) REFERENCES player(playerId)
+    FOREIGN KEY (receiverPlayerId) REFERENCES player(playerId),
+    FOREIGN KEY (playerId) REFERENCES player(playerId)
 );
 
 CREATE TABLE foul_event (
     eventId BIGINT PRIMARY KEY,
+    playerId INT,
     foulType VARCHAR(20),
     fouledPlayerId INT,
     FOREIGN KEY (eventId) REFERENCES game_event(eventId),
-    FOREIGN KEY (fouledPlayerId) REFERENCES player(playerId)
+    FOREIGN KEY (fouledPlayerId) REFERENCES player(playerId),
+    FOREIGN KEY (playerId) REFERENCES player(playerId)
 );
 
 CREATE TABLE rebound_event (
     eventId BIGINT PRIMARY KEY,
+    playerId INT,
     reboundType VARCHAR(10),
-    FOREIGN KEY (eventId) REFERENCES game_event(eventId)
+    FOREIGN KEY (eventId) REFERENCES game_event(eventId),
+    FOREIGN KEY (playerId) REFERENCES player(playerId)
 );
 
 CREATE TABLE block_event (
     eventId BIGINT PRIMARY KEY,
+    playerId INT,
     blockedPlayerId INT,
     FOREIGN KEY (eventId) REFERENCES game_event(eventId),
-    FOREIGN KEY (blockedPlayerId) REFERENCES player(playerId)
+    FOREIGN KEY (blockedPlayerId) REFERENCES player(playerId),
+    FOREIGN KEY (playerId) REFERENCES player(playerId)
 );
 
 CREATE TABLE steal_event (
     eventId BIGINT PRIMARY KEY,
+    playerId INT,
     stolenFromPlayerId INT,
     FOREIGN KEY (eventId) REFERENCES game_event(eventId),
-    FOREIGN KEY (stolenFromPlayerId) REFERENCES player(playerId)
+    FOREIGN KEY (stolenFromPlayerId) REFERENCES player(playerId),
+    FOREIGN KEY (playerId) REFERENCES player(playerId)
 );
 
 CREATE TABLE turnover_event (
     eventId BIGINT PRIMARY KEY,
+    playerId INT,
     turnoverType VARCHAR(20),
-    FOREIGN KEY (eventId) REFERENCES game_event(eventId)
+    FOREIGN KEY (eventId) REFERENCES game_event(eventId),
+    FOREIGN KEY (playerId) REFERENCES player(playerId)
 );
 
 CREATE TABLE substitution_event (
@@ -99,8 +113,10 @@ CREATE TABLE substitution_event (
 
 CREATE TABLE timeout_event (
     eventId BIGINT PRIMARY KEY,
+    playerId INT,
     timeoutType VARCHAR(10),
-    FOREIGN KEY (eventId) REFERENCES game_event(eventId)
+    FOREIGN KEY (eventId) REFERENCES game_event(eventId),
+    FOREIGN KEY (playerId) REFERENCES player(playerId)
 );
 
 CREATE TABLE jump_ball_event (
