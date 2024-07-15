@@ -130,7 +130,7 @@ CREATE TABLE jump_ball_event (
 
 CREATE TABLE player_statistics (
     stat_id SERIAL PRIMARY KEY,
-    player_id INT,
+    playerId INT,
     game_id INT,
     timestamp BIGINT,
     points INT DEFAULT 0,
@@ -148,6 +148,6 @@ CREATE TABLE player_statistics (
     free_throws_made INT DEFAULT 0,
     free_throws_attempted INT DEFAULT 0,
     plus_minus INT DEFAULT 0,
-    FOREIGN KEY (player_id) REFERENCES player(playerId),
+    FOREIGN KEY (playerId) REFERENCES player(playerId),
     FOREIGN KEY (game_id) REFERENCES game(gameId)
 );
