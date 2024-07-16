@@ -1,4 +1,4 @@
- Basketball Game Event Generator
+# Basketball Game Event Generator
 
 This project simulates a basketball game by generating random game events. It uses Python for the main logic, Kafka for the message broker and Spark for processing the game events. The game events are stored in a PostgreSQL database.
 
