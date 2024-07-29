@@ -24,7 +24,7 @@ players = {
     19: 'Joel Embiid',
     20: 'Bradley Beal',
 }
-teams = [1, 2]  # Assuming team IDs are 1 and 2
+teams = [1, 2] # Assuming team IDs are 1 and 2
 
 # Connect to your PostgreSQL database
 conn = psycopg2.connect(
@@ -35,6 +35,13 @@ conn = psycopg2.connect(
     password='postgres'
 )
 cur = conn.cursor()
+
+# populate the team table
+for team_id in teams:
+    cur.execute(
+        "INSERT INTO team (teamId, teamName) VALUES (%s, %s)",
+        (team_id, 'Home Team' if team_id == 1 else 'Away Team')
+    )
 
 # Populate the player table
 for player_id, player_name in players.items():
@@ -53,15 +60,8 @@ for player_id, team_id in player_team.items():
         (team_id, player_id)
     )
 
-# populate the team table
-for team_id in teams:
-    cur.execute(
-        "INSERT INTO team (teamId, teamName) VALUES (%s, %s)",
-        (team_id, "Team " + str(team_id))
-    )
-
 # populate the game table
-for game_id in range(1, 6):
+for game_id in range(1, 3):
     cur.execute(
         "INSERT INTO game (gameId) VALUES (%s)",
         (game_id,)

@@ -1,15 +1,15 @@
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, Window
 from pyspark.sql import functions as F
 
+# Initialize Spark session
 spark = (SparkSession.builder
          .appName("PadinET Data Processor")
          .config("spark.jars", "postgresql-42.7.3.jar")
-         .getOrCreate()
-         )
+         .getOrCreate())
 
 
 def read_data_from_postgres(table_name):
-    df = spark.read \
+    return spark.read \
         .format("jdbc") \
         .option("url", "jdbc:postgresql://localhost:5432/postgres") \
         .option("dbtable", table_name) \
@@ -17,7 +17,6 @@ def read_data_from_postgres(table_name):
         .option("password", "postgres") \
         .option("driver", "org.postgresql.Driver") \
         .load()
-    return df
 
 
 def write_data_to_postgres(df):
@@ -28,10 +27,12 @@ def write_data_to_postgres(df):
         .option("user", "postgres") \
         .option("password", "postgres") \
         .option("driver", "org.postgresql.Driver") \
-        .mode("append") \
+        .mode("overwrite") \
         .save()
 
 
+# Read data from PostgreSQL
+game_event_df = read_data_from_postgres("game_event")
 shot_event_df = read_data_from_postgres("shot_event")
 pass_event_df = read_data_from_postgres("pass_event")
 foul_event_df = read_data_from_postgres("foul_event")
@@ -39,89 +40,66 @@ rebound_event_df = read_data_from_postgres("rebound_event")
 block_event_df = read_data_from_postgres("block_event")
 steal_event_df = read_data_from_postgres("steal_event")
 turnover_event_df = read_data_from_postgres("turnover_event")
-substitution_event_df = read_data_from_postgres("substitution_event")
-timeout_event_df = read_data_from_postgres("timeout_event")
-jump_ball_event_df = read_data_from_postgres("jump_ball_event")
 
-# Calculate statistics for each DataFrame
-shot_stats = shot_event_df.withColumn("madeShot", F.col("madeShot").cast("integer")) \
-    .groupBy("playerId", "eventId") \
-    .agg(
-    F.count("*").alias("field_goals_attempted"),
-    F.sum("madeShot").alias("field_goals_made"),
-    F.sum(F.when(F.col("shotType") == "3PT", 1).otherwise(0)).alias("three_pointers_attempted"),
-    F.sum(F.when((F.col("shotType") == "3PT") & (F.col("madeShot") == 1), 1).otherwise(0)).alias("three_pointers_made"),
-    F.sum(F.when(F.col("shotType") == "FT", 1).otherwise(0)).alias("free_throws_attempted"),
-    F.sum(F.when((F.col("shotType") == "FT") & (F.col("madeShot") == 1), 1).otherwise(0)).alias("free_throws_made")
-)
+# Join data
+game_event_df = game_event_df.alias("game_event")
+shot_event_df = shot_event_df.alias("shot_event")
+pass_event_df = pass_event_df.alias("pass_event")
+foul_event_df = foul_event_df.alias("foul_event")
+rebound_event_df = rebound_event_df.alias("rebound_event")
+block_event_df = block_event_df.alias("block_event")
+steal_event_df = steal_event_df.alias("steal_event")
+turnover_event_df = turnover_event_df.alias("turnover_event")
 
-pass_stats = pass_event_df.groupBy("playerId", "eventId") \
-    .agg(
-    F.count("*").alias("total_passes"),
-    F.sum(F.when(F.col("passOutcome") == "completed", 1).otherwise(0)).alias("successful_passes")
-)
+# Join game_event with specific event tables
+game_event_df = game_event_df.join(shot_event_df, game_event_df.eventid == shot_event_df.eventid, "left") \
+    .join(pass_event_df, game_event_df.eventid == pass_event_df.eventid, "left") \
+    .join(foul_event_df, game_event_df.eventid == foul_event_df.eventid, "left") \
+    .join(rebound_event_df, game_event_df.eventid == rebound_event_df.eventid, "left") \
+    .join(block_event_df, game_event_df.eventid == block_event_df.eventid, "left") \
+    .join(steal_event_df, game_event_df.eventid == steal_event_df.eventid, "left") \
+    .join(turnover_event_df, game_event_df.eventid == turnover_event_df.eventid, "left")
 
-foul_stats = foul_event_df.groupBy("playerId", "eventId").agg(F.count("*").alias("fouls"))
-rebound_stats = rebound_event_df.groupBy("playerId", "eventId").agg(F.count("*").alias("rebounds"))
-block_stats = block_event_df.groupBy("playerId", "eventId").agg(F.count("*").alias("blocks"))
-steal_stats = steal_event_df.groupBy("playerId", "eventId").agg(F.count("*").alias("steals"))
-turnover_stats = turnover_event_df.groupBy("playerId", "eventId").agg(F.count("*").alias("turnovers"))
-
-# Union all DataFrames
-player_stats = shot_stats.join(pass_stats, ["playerId", "eventId"], "outer") \
-    .join(foul_stats, ["playerId", "eventId"], "outer") \
-    .join(rebound_stats, ["playerId", "eventId"], "outer") \
-    .join(block_stats, ["playerId", "eventId"], "outer") \
-    .join(steal_stats, ["playerId", "eventId"], "outer") \
-    .join(turnover_stats, ["playerId", "eventId"], "outer")
-
-# Calculate percentages and additional statistics
-player_stats = player_stats.withColumn("field_goal_percentage",
-                                       F.round(F.col("field_goals_made") / F.col("field_goals_attempted") * 100, 2)) \
-    .withColumn("three_point_percentage",
-                F.round(F.col("three_pointers_made") / F.col("three_pointers_attempted") * 100, 2)) \
-    .withColumn("free_throw_percentage", F.round(F.col("free_throws_made") / F.col("free_throws_attempted") * 100, 2)) \
-    .withColumn("points", F.col("field_goals_made") * 2 + F.col("three_pointers_made") + F.col("free_throws_made")) \
-    .withColumn("effective_field_goal_percentage", F.round(
-    (F.col("field_goals_made") + 0.5 * F.col("three_pointers_made")) / F.col("field_goals_attempted") * 100, 2)) \
-    .withColumn("true_shooting_percentage", F.round(
-    F.col("points") / (2 * (F.col("field_goals_attempted") + 0.44 * F.col("free_throws_attempted"))) * 100, 2)) \
-    .withColumn("assist_percentage", F.round(F.col("successful_passes") / F.col("total_passes") * 100, 2))
-
-# Add timestamp
-# get the corresponding gameid from the eventid in the game_event table and  asign the value to the gameId column and remove the eventId column
-
-game_event_df = read_data_from_postgres("game_event").select("eventId", "gameId")
-player_stats = player_stats.join(game_event_df, "eventId", "inner").drop("eventId")
-
-player_stats = player_stats.withColumnRenamed("eventId", "gameId")
-
-# groupe by gameId and playerId and sum the statistics
-player_stats = player_stats.groupBy("gameId", "playerId") \
-    .agg(
-    F.sum("field_goals_attempted").alias("field_goals_attempted"),
-    F.sum("field_goals_made").alias("field_goals_made"),
-    F.sum("three_pointers_attempted").alias("three_pointers_attempted"),
-    F.sum("three_pointers_made").alias("three_pointers_made"),
-    F.sum("free_throws_attempted").alias("free_throws_attempted"),
-    F.sum("free_throws_made").alias("free_throws_made"),
-    F.sum("total_passes").alias("total_passes"),
-    F.sum("successful_passes").alias("successful_passes"),
-    F.sum("fouls").alias("fouls"),
-    F.sum("rebounds").alias("rebounds"),
-    F.sum("blocks").alias("blocks"),
-    F.sum("steals").alias("steals"),
-    F.sum("turnovers").alias("turnovers"),
-    F.sum("points").alias("points"),
-    F.avg("field_goal_percentage").alias("field_goal_percentage"),
-    F.avg("three_point_percentage").alias("three_point_percentage"),
-    F.avg("free_throw_percentage").alias("free_throw_percentage"),
-    F.avg("effective_field_goal_percentage").alias("effective_field_goal_percentage"),
-    F.avg("true_shooting_percentage").alias("true_shooting_percentage"),
-    F.avg("assist_percentage").alias("assist_percentage")
+# Calculate statistics
+player_stats = game_event_df.groupBy("game_event.playerId", "game_event.gameId").agg(
+    F.sum(F.when(game_event_df.eventtype == "shot", 1).otherwise(0)).alias("field_goals_attempted"),
+    F.sum(F.when((game_event_df.eventtype == "shot") & (shot_event_df.madeshot == True), 1).otherwise(0)).alias(
+        "field_goals_made"),
+    F.sum(F.when((game_event_df.eventtype == "shot") & (shot_event_df.shottype == "3pt"), 1).otherwise(0)).alias(
+        "three_pointers_attempted"),
+    F.sum(F.when(
+        (game_event_df.eventtype == "shot") & (shot_event_df.shottype == "3pt") & (shot_event_df.madeshot == True),
+        1).otherwise(0)).alias("three_pointers_made"),
+    F.sum(F.when((game_event_df.eventtype == "shot") & (shot_event_df.shottype == "freethrow"), 1).otherwise(0)).alias(
+        "free_throws_attempted"),
+    F.sum(F.when((game_event_df.eventtype == "shot") & (shot_event_df.shottype == "freethrow") & (
+            shot_event_df.madeshot == True), 1).otherwise(0)).alias("free_throws_made"),
+    F.sum(F.when(game_event_df.eventtype == "pass", 1).otherwise(0)).alias("total_passes"),
+    F.sum(
+        F.when((game_event_df.eventtype == "pass") & (pass_event_df.passoutcome == "completed"), 1).otherwise(0)).alias(
+        "successful_passes"),
+    F.sum(F.when(game_event_df.eventtype == "foul", 1).otherwise(0)).alias("fouls"),
+    F.sum(F.when(game_event_df.eventtype == "rebound", 1).otherwise(0)).alias("rebounds"),
+    F.sum(F.when(game_event_df.eventtype == "block", 1).otherwise(0)).alias("blocks"),
+    F.sum(F.when(game_event_df.eventtype == "steal", 1).otherwise(0)).alias("steals"),
+    F.sum(F.when(game_event_df.eventtype == "turnover", 1).otherwise(0)).alias("turnovers"),
+    ((F.sum(F.when((game_event_df.eventtype == "shot") & (shot_event_df.madeshot == True), 1).otherwise(0)) * 2) +
+     (F.sum(F.when((game_event_df.eventtype == "shot") & (shot_event_df.shottype == "three-pointer") & (
+             shot_event_df.madeshot == True), 1).otherwise(0)) * 3) +
+     F.sum(F.when((game_event_df.eventtype == "shot") & (shot_event_df.shottype == "free-throw") & (
+             shot_event_df.madeshot == True), 1).otherwise(0))).alias("points")
 )
 
 # Write data to PostgreSQL
 write_data_to_postgres(player_stats)
 
+# Print the best player in each game based on points
+print("Best player in each game:")
+window = Window.partitionBy("gameId")
+player_stats = player_stats.withColumn("max_points", F.max("points").over(window))
+player_stats = player_stats.filter(player_stats.points == player_stats.max_points)
+player_stats = player_stats.drop("max_points")
+player_stats.show()
+
+# Stop Spark session
 spark.stop()

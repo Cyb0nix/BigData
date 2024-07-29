@@ -16,7 +16,7 @@ producer = KafkaProducer(
 )
 
 # Game Information (Replace with actual data)
-game_id = [1, 2, 3, 4, 5]
+game_id = [1, 2]
 teams = ['Home Team', 'Away Team']
 players = {
     1: 'LeBron James',
@@ -108,4 +108,3 @@ while True:
     event = generate_game_event()
     print(f"Sending event: {event}")
     producer.send(topic_name, value=event)
-    time.sleep(random.uniform(0.1, 2))

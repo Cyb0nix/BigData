@@ -14,6 +14,26 @@ The project uses the following technologies:
 - SQL: Used to store the game events.
 - Python: Used to write the main logic.
 
+## Code Explanation
+
+### Producer.py
+
+The Producer.py script generates random game events and sends them to the Kafka broker. 
+The game events are generated using the Faker library. 
+The script sends the game events to the Kafka broker using the KafkaProducer class from the kafka-python library and runs in an infinite loop and generates a new game event every second. 
+The script also prints the game events to the console.
+
+### Consumer.py
+
+The Consumer.py script consumes the game events from the Kafka broker. 
+The script uses the KafkaConsumer class from the kafka-python library to consume the game events and stores them in a list called game_events.
+This list is stored in a postgres database using the psycopg2 library, each type of event is stored in a different table in the database.
+The script runs in an infinite loop and prints the game events to the console.
+
+### DataProcessor.py
+
+The DataProcessor.py script processes the game events using Spark and stores the results in a PostgreSQL database using the psycopg2 library and the Spark SQL library.
+The best player is calculated by counting the number of points scored by each player and selecting the player with the highest score of each game.
 
 ## Getting Started
 
@@ -42,6 +62,19 @@ cd BigData
 docker-compose up -d
 ```
 
+4. Install the required Python libraries
+```bash
+pip install -r requirements.txt
+```
+
+5. Create the PostgreSQL database and tables by running the database.sql script
+```bash
+docker exec -i bigdata_postgres psql -U postgres -d postgres < database.sql
+```
+6. initialize the database by running the dbInit.py script
+```bash
+python dbInit.py
+```
 
 ## Usage
 
