@@ -1,105 +1,138 @@
-# Basketball Game Event Generator
+<p align="center">
+  <img src="https://raw.githubusercontent.com/PKief/vscode-material-icon-theme/ec559a9f6bfd399b82bb44393651661b08aaf7ba/icons/folder-markdown-open.svg" width="100" alt="project-logo">
+</p>
+<p align="center">
+    <h1 align="center">BIGDATA</h1>
+</p>
+<p align="center">
+    <em>Transforming game events into winning insights.</em>
+</p>
+<p align="center">
+	<img src="https://img.shields.io/github/license/Cyb0nix/BigData?style=default&logo=opensourceinitiative&logoColor=white&color=0080ff" alt="license">
+	<img src="https://img.shields.io/github/last-commit/Cyb0nix/BigData?style=default&logo=git&logoColor=white&color=0080ff" alt="last-commit">
+	<img src="https://img.shields.io/github/languages/top/Cyb0nix/BigData?style=default&color=0080ff" alt="repo-top-language">
+	<img src="https://img.shields.io/github/languages/count/Cyb0nix/BigData?style=default&color=0080ff" alt="repo-language-count">
+<p>
+<p align="center">
+	<!-- default option, no dependency badges. -->
+</p>
 
-This project simulates a basketball game by generating random game events. It uses Python for the main logic, Kafka for the message broker and Spark for processing the game events. The game events are stored in a PostgreSQL database.
+<br><!-- TABLE OF CONTENTS -->
 
-The project consists of three main components:
-- Producer.py: Generates random game events and sends them to the Kafka broker.
-- Consumer.py: Consumes the game events from the Kafka broker.
-- DataProcessor.py: Processes the game events using Spark.
+<details>
+  <summary>Table of Contents</summary><br>
 
-The project uses the following technologies:
-- Docker: Used to run the Kafka broker and Spark.
-- Kafka: Message broker used to send and receive game events.
-- Spark: Used to process the game events.
-- SQL: Used to store the game events.
-- Python: Used to write the main logic.
+- [ Overview](#-overview)
+- [ Features](#-features)
+- [ Repository Structure](#-repository-structure)
+- [ Modules](#-modules)
+- [ Getting Started](#-getting-started)
+  - [ Installation](#-installation)
+  - [ Usage](#-usage)
+  </details>
+  <hr>
 
-## Code Explanation
+## Overview
 
-### Producer.py
+The BigData project, also known as HoopsAnalyzer, leverages Kafka, PostgreSQL, and Apache Spark technologies to simulate, process, and analyze basketball game events. This comprehensive system generates diverse game events, efficiently handles event consumption and storage, and performs advanced analytics to provide valuable insights for sports enthusiasts and analysts alike.
 
-The Producer.py script generates random game events and sends them to the Kafka broker. 
-The game events are generated using the Faker library. 
-The script sends the game events to the Kafka broker using the KafkaProducer class from the kafka-python library and runs in an infinite loop and generates a new game event every second. 
-The script also prints the game events to the console.
+## Repository Structure
 
-### Consumer.py
+```sh
+└── BigData/
+    ├── Consumer.py
+    ├── DataProcessor.py
+    ├── Producer.py
+    ├── Readme.md
+    ├── database.sql
+    ├── dbInit.py
+    ├── docker-compose.yml
+    ├── postgresql-42.7.3.jar
+    └── requirements.txt
+```
 
-The Consumer.py script consumes the game events from the Kafka broker. 
-The script uses the KafkaConsumer class from the kafka-python library to consume the game events and stores them in a list called game_events.
-This list is stored in a postgres database using the psycopg2 library, each type of event is stored in a different table in the database.
-The script runs in an infinite loop and prints the game events to the console.
+---
 
-### DataProcessor.py
+## Modules
 
-The DataProcessor.py script processes the game events using Spark and stores the results in a PostgreSQL database using the psycopg2 library and the Spark SQL library.
-The best player is calculated by counting the number of points scored by each player and selecting the player with the highest score of each game.
+<details closed><summary>.</summary>
+
+| File                                                                                    | Summary                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Producer.py](https://github.com/Cyb0nix/BigData/blob/master/Producer.py)               | The Producer.py script generates random game events and sends them to the Kafka broker. The game events are generated using the Faker library. The script sends the game events to the Kafka broker using the KafkaProducer class from the kafka-python library and runs in an infinite loop and generates a new game event every second. The script also prints the game events to the console.                                               |
+| [docker-compose.yml](https://github.com/Cyb0nix/BigData/blob/master/docker-compose.yml) | Establishes services for zookeeper, kafka, and postgres containers with specific configurations for image versions, ports, and environment variables. Facilitates efficient message processing and data storage within the BigData system.                                                                                                                                                                                                     |
+| [dbInit.py](https://github.com/Cyb0nix/BigData/blob/master/dbInit.py)                   | Initializes PostgreSQL database with player, team, and game data, associating players to teams randomly. Handles data population and commits changes for sports analytics in the architecture.                                                                                                                                                                                                                                                 |
+| [Consumer.py](https://github.com/Cyb0nix/BigData/blob/master/Consumer.py)               | The Consumer.py script consumes the game events from the Kafka broker. The script uses the KafkaConsumer class from the kafka-python library to consume the game events and stores them in a list called game_events. This list is stored in a postgres database using the psycopg2 library, each type of event is stored in a different table in the database. The script runs in an infinite loop and prints the game events to the console. |
+| [DataProcessor.py](https://github.com/Cyb0nix/BigData/blob/master/DataProcessor.py)     | The DataProcessor.py script processes the game events using Spark and stores the results in a PostgreSQL database using the psycopg2 library and the Spark SQL library. The best player is calculated by counting the number of points scored by each player and selecting the player with the highest score of each game.                                                                                                                     |
+
+</details>
+
+---
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
+**System Requirements:**
 
-### Prerequisites
-
-- Python
-- Docker
-- Docker Compose
+- **Python**: `version x.y.z`
 
 ### Installation
 
-1. Clone the repository
-```bash
-git clone https://github.com/Cyb0nix/BigData.git
-```
+<h4>From <code>source</code></h4>
 
-2. Change directory
-```bash
-cd BigData
-```
+> 1. Clone the BigData repository:
+>
+> ```console
+> $ git clone https://github.com/Cyb0nix/BigData
+> ```
+>
+> 2. Build and run Docker containers:
+>
+> ```console
+> $ docker-compose up -d
+> ```
+>
+> 3. Install the dependencies:
+>
+> ```console
+> $ pip install -r requirements.txt
+> ```
+>
+> 4. Initialize the database:
+>
+> ```console
+> $ docker exec -i bigdata_postgres psql -U postgres -d postgres < database.sql
+> $ python dbInit.py
+> ```
 
-3. Build the Docker image and run the container
-```bash
-docker-compose up -d
-```
+### Usage
 
-4. Install the required Python libraries
-```bash
-pip install -r requirements.txt
-```
+<h4>From <code>source</code></h4>
 
-5. Create the PostgreSQL database and tables by running the database.sql script
-```bash
-docker exec -i bigdata_postgres psql -U postgres -d postgres < database.sql
-```
-6. initialize the database by running the dbInit.py script
-```bash
-python dbInit.py
-```
+> 1. Start event generation:
+>
+> ```console
+> $ python Producer.py
+> ```
+>
+> 2. Start event consumption:
+>
+> ```console
+> $ python Consumer.py
+> ```
+>
+> 3. Start data processing:
+>
+> ```console
+> $ python python DataProcessor.py
+> ```
 
-## Usage
+## Technologies Used
 
-Run the Producer.py script to start generating game events.
-
-```bash
-python Producer.py
-```
-
-Run the Consumer.py script to start consuming game events.
-
-```bash
-python Consumer.py
-```
-
-Run the DataProcessor.py script to start processing game events.
-
-```bash
-python DataProcessor.py
-```
-
-## Built With
-
-- Python
-- SQL
-- Docker
-- Kafka
-
+| Technology                                                                                                                | Description                             |
+| ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)                     | Main programming language               |
+| ![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-231F20?style=for-the-badge&logo=apache-kafka&logoColor=white) | Message broker for event streaming      |
+| ![Apache Spark](https://img.shields.io/badge/Apache%20Spark-E25A1C?style=for-the-badge&logo=apache-spark&logoColor=white) | Data processing and analytics           |
+| ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white)         | Database for storing events and results |
+| ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)                     | Containerization and orchestration      |
+| ![SQL](https://img.shields.io/badge/SQL-4479A1?style=for-the-badge&logo=sql&logoColor=white)                              | Database operations                     |
